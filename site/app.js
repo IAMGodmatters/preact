@@ -73,6 +73,6 @@ function App(){
  return h('main',{class:dark?'app':'app light'},h('header',{class:'topbar'},h('a',{class:'brand',href:'#home',onClick:e=>{e.preventDefault();setPage('home')}},h('span',{class:'brand-mark'},'M'),h('span',null,h('strong',null,'MAGNANIMOUS'),h('small',null,'USEFUL TOOLS STUDIO'))),h('button',{class:'theme-toggle',onClick:()=>{setDark(!dark);writeStore('mw-theme',!dark)}},dark?'Light mode':'Dark mode')),
  h('div',{class:'shell'},h('aside',{class:'sidebar'},h('p',{class:'nav-label'},'WORKSPACE'),tools.map(([id,label,ico])=>h('button',{class:'nav-item'+(page===id?' active':''),onClick:()=>{setPage(id);setQuery('')}},h('span',{class:'nav-icon'},ico),label)),h('div',{class:'side-bottom'},h('button',{class:'nav-item',onClick:exportData},h('span',{class:'nav-icon'},'↓'),'Export backup'),h('small',null,'Your data stays on this device'))),h('div',{class:'main-content'},content)),
  toast?h('div',{class:'toast',role:'status'},toast):null,
- h('footer',null,h('strong',null,'I Am Magnanimous Way™'),h('span',null,'ONE GOD • ONE PEOPLE • A BRIGHTER TOMORROW'),h('small',null,'Free browser tools · Local storage · No account or paid services required'))));
+ h('footer',null,h('strong',null,'I Am Magnanimous Way™'),h('span',null,'ONE GOD • ONE PEOPLE • A BRIGHTER TOMORROW'),h('small',null,'Free browser tools · Local storage · No account or paid services required')));
 }
 render(h(App),document.getElementById('app'));
