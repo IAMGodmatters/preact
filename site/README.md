@@ -20,6 +20,7 @@ A free, private browser-based productivity workspace published as a static site.
 - No account, server database, analytics, API keys, paid provider, or external AI service.
 - Data does not sync between devices. Use Backup & restore to preserve or move it.
 - Restore accepts Magnanimous Studio JSON backups up to 5 MB, asks before replacing local data, sanitizes malformed records, validates calendar dates, and writes all four collections as one rollback-protected operation.
+- If browser storage rejects a save, the app keeps the last successfully saved state and leaves new task, note, planner, or habit input available for retry.
 - Clearing browser storage can remove local data.
 - Preact and Preact Hooks load from esm.sh; internet access is required for the initial app load.
 - The focus timer runs while the page remains open; it is not a background notification service.

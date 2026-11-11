@@ -208,6 +208,8 @@ try {
       await damagedPage.getByPlaceholder('What needs to get done?').fill('Unsaved task');
       await damagedPage.getByRole('button', { name: 'Add task' }).click();
       await damagedPage.getByText('This browser could not save the change.').waitFor();
+      if (await damagedPage.getByPlaceholder('What needs to get done?').inputValue() !== 'Unsaved task') throw new Error('Failed save cleared the task input');
+      if (await damagedPage.getByText('Unsaved task').count() !== 0) throw new Error('Failed save changed the visible task list');
     } finally { await damagedPage.close(); }
   });
   await check('application has no uncaught page errors', async () => {
