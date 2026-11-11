@@ -1,8 +1,12 @@
 import { chromium } from 'playwright';
+import { unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const failures = [];
+let backupPath;
 const check = async (name, fn) => {
   try { await fn(); console.log('PASS', name); }
   catch (error) { failures.push({ name, error: error.message }); console.error('FAIL', name, error.message); }
@@ -79,12 +83,28 @@ try {
     await toggle.click();
     await page.getByRole('button', { name: 'Dark mode' }).waitFor();
   });
-  await check('backup export control', async () => {
+  await check('backup export and restore', async () => {
     await page.getByRole('button', { name: 'Backup & restore', exact: true }).click();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Download full backup' }).click();
     const download = await downloadPromise;
     if (!download.suggestedFilename().endsWith('.json')) throw new Error('Backup was not JSON');
+    backupPath = join(tmpdir(), `magnanimous-studio-smoke-${Date.now()}.json`);
+    await download.saveAs(backupPath);
+    await page.evaluate(() => localStorage.clear());
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Backup & restore', exact: true }).click();
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('input[type="file"]').setInputFiles(backupPath);
+    await page.getByText('Backup restored successfully').waitFor();
+    await page.getByRole('button', { name: 'Tasks', exact: true }).click();
+    await page.getByText('Smoke test task').waitFor();
+    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+    await page.getByText('Smoke test note').waitFor();
+    await page.getByRole('button', { name: 'Planner', exact: true }).click();
+    await page.getByText('Smoke test appointment').waitFor();
+    await page.getByRole('button', { name: 'Habits', exact: true }).click();
+    await page.getByText('Daily reading').waitFor();
   });
   await check('mobile layout has no horizontal overflow', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -93,6 +113,7 @@ try {
   });
 } finally {
   await browser.close();
+  if (backupPath) await unlink(backupPath).catch(() => {});
 }
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
