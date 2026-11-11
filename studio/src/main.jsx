@@ -150,15 +150,15 @@ function App() {
     if (!timerRunning) return undefined;
     const interval = setInterval(() => {
       setTimerSeconds((remaining) => {
-        if (remaining <= 1) {
-          setTimerRunning(false);
-          return 0;
-        }
+        if (remaining <= 1) return 0;
         return remaining - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [timerRunning]);
+  useEffect(() => {
+    if (timerRunning && timerSeconds === 0) setTimerRunning(false);
+  }, [timerRunning, timerSeconds]);
 
   useEffect(() => {
     const units = unitCategory === 'Temperature' ? ['°C', '°F', 'K'] : Object.keys(UNITS[unitCategory]);
