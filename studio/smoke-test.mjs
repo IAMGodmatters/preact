@@ -74,6 +74,7 @@ try {
 
   await page.getByRole('button', { name: 'Light mode' }).click();
   await page.locator('.app.light').waitFor();
+  await page.waitForFunction(() => localStorage.getItem('magnanimous-studio-theme-v1') === 'light');
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('.app.light').waitFor();
   await page.getByRole('button', { name: /Tasks/ }).click();
