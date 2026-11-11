@@ -113,6 +113,9 @@ function App() {
   const [taskTitle, setTaskTitle] = useState('');
   const [noteTitle, setNoteTitle] = useState('');
   const [noteBody, setNoteBody] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState('');
+  const [editingNoteTitle, setEditingNoteTitle] = useState('');
+  const [editingNoteBody, setEditingNoteBody] = useState('');
   const [planTitle, setPlanTitle] = useState('');
   const [planDate, setPlanDate] = useState(localDate());
   const [planTime, setPlanTime] = useState('09:00');
@@ -195,6 +198,16 @@ function App() {
     setNoteTitle('');
     setNoteBody('');
   }
+  function beginEditNote(note) {
+    setEditingNoteId(note.id);
+    setEditingNoteTitle(note.title);
+    setEditingNoteBody(note.body);
+  }
+  function saveNoteEdit(event) {
+    event.preventDefault();
+    setWorkspace((old) => ({ ...old, notes: old.notes.map((note) => note.id === editingNoteId ? { ...note, title: editingNoteTitle.trim() || 'Untitled note', body: editingNoteBody, updatedAt: Date.now() } : note) }));
+    setEditingNoteId('');
+  }
   function addPlan(event) {
     event.preventDefault();
     if (!planTitle.trim()) return;
@@ -249,11 +262,12 @@ function App() {
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     setBackupMessage('Backup created. Keep the JSON file somewhere safe.');
   }
   async function restoreBackup(event) {
-    const file = event.currentTarget.files && event.currentTarget.files[0];
+    const input = event.currentTarget;
+    const file = input.files && input.files[0];
     if (!file) return;
     try {
       if (file.size > 2 * 1024 * 1024) throw new Error('Backup file is larger than 2 MB.');
@@ -269,7 +283,7 @@ function App() {
     } catch (error) {
       setBackupMessage(error.message || 'Backup could not be restored.');
     } finally {
-      event.currentTarget.value = '';
+      input.value = '';
     }
   }
   function toggleTask(id) {
@@ -330,7 +344,7 @@ function App() {
             <section class="panel">
               <div class="panel-heading"><div><h2>Quick notes</h2><p>Write it down so you can return to it.</p></div><span class="count-badge">{workspace.notes.length}</span></div>
               <form class="stack-form" onSubmit={addNote}><input aria-label="Note title" value={noteTitle} onInput={(event) => setNoteTitle(event.currentTarget.value)} placeholder="Note title" maxlength="120" /><textarea aria-label="Note text" value={noteBody} onInput={(event) => setNoteBody(event.currentTarget.value)} placeholder="Start writing..." rows="5" /><button type="submit" class="primary-button">Save note</button></form>
-              <div class="note-grid">{workspace.notes.map((note) => <article class="note-card" key={note.id}><div><h3>{note.title}</h3><p>{note.body}</p></div><button class="icon-button" type="button" aria-label={'Delete note ' + note.title} onClick={() => deleteItem('notes', note.id)}>×</button></article>)}</div>
+              <div class="note-grid">{workspace.notes.map((note) => editingNoteId === note.id ? <form class="note-card edit-note" key={note.id} onSubmit={saveNoteEdit}><input aria-label="Edit note title" value={editingNoteTitle} onInput={(event) => setEditingNoteTitle(event.currentTarget.value)} /><textarea aria-label="Edit note text" rows="4" value={editingNoteBody} onInput={(event) => setEditingNoteBody(event.currentTarget.value)} /><div class="button-row"><button class="primary-button" type="submit">Save changes</button><button class="secondary-button" type="button" onClick={() => setEditingNoteId('')}>Cancel</button></div></form> : <article class="note-card" key={note.id}><div><h3>{note.title}</h3><p>{note.body}</p><button class="text-button" type="button" onClick={() => beginEditNote(note)}>Edit note</button></div><button class="icon-button" type="button" aria-label={'Delete note ' + note.title} onClick={() => deleteItem('notes', note.id)}>×</button></article>)}</div>
               {workspace.notes.length === 0 && <div class="empty-state"><span>✎</span><strong>Your notes will appear here.</strong></div>}
             </section>
           )}
