@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: studio-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   pages-preflight:
@@ -110,21 +110,27 @@ jobs:
         run: |
           set -euo pipefail
           SITE_URL="${SITE_URL%/}/"
-          for attempt in $(seq 1 12); do
-            if curl --fail --silent --show-error --location "$SITE_URL" -o /tmp/studio-index.html; then
-              break
-            fi
-            if [ "$attempt" -eq 12 ]; then
-              echo "::error::Published Studio URL did not become reachable after 12 attempts: $SITE_URL"
-              exit 1
-            fi
-            sleep 5
-          done
+          SITE_ORIGIN="${SITE_URL%%/preact/*}"
+          retry_url() {
+            local url="$1"
+            local output="$2"
+            for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error --location "$url" -o "$output"; then
+                return 0
+              fi
+              if [ "$attempt" -lt 12 ]; then sleep 5; fi
+            done
+            echo "::error::URL did not become reachable after 12 attempts: $url"
+            return 1
+          }
+          retry_url "$SITE_URL" /tmp/studio-index.html
           grep -q '<title>Magnanimous Preact Studio</title>' /tmp/studio-index.html
           asset_path="$(grep -oE 'src="/preact/[^"]+\.js"' /tmp/studio-index.html | head -n 1 | cut -d '"' -f 2)"
-          if [ -z "$asset_path" ]; then
-            echo "::error::Published HTML does not reference the expected /preact/ JavaScript bundle."
+          css_path="$(grep -oE 'href="/preact/[^"]+\.css"' /tmp/studio-index.html | head -n 1 | cut -d '"' -f 2)"
+          if [ -z "$asset_path" ] || [ -z "$css_path" ]; then
+            echo "::error::Published HTML is missing the expected /preact/ JavaScript or CSS asset reference."
             exit 1
           fi
-          curl --fail --silent --show-error --location "${SITE_URL%/}${asset_path}" -o /dev/null
-          echo "Published Studio HTML and JavaScript bundle are reachable."
+          retry_url "$SITE_ORIGIN$asset_path" /dev/null
+          retry_url "$SITE_ORIGIN$css_path" /dev/null
+          echo "Published Studio HTML, JavaScript bundle, and CSS bundle are reachable."
