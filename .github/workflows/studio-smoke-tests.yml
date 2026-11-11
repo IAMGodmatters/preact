@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'site/**'
+      - 'studio/**'
       - '.github/workflows/studio-smoke-tests.yml'
   push:
     branches: [main]
@@ -35,6 +36,7 @@ jobs:
           npm install --prefix "$TEST_DIR" --no-save --package-lock=false --ignore-scripts playwright
           "$TEST_DIR/node_modules/.bin/playwright" install --with-deps chromium
           cp site/smoke-test.mjs "$TEST_DIR/smoke-test.mjs"
+          cp studio/smoke-test.mjs "$TEST_DIR/studio-smoke-test.mjs"
       - name: Serve static app
         run: |
           python3 -m http.server 4173 --directory site > /tmp/studio-http.log 2>&1 &
@@ -43,3 +45,17 @@ jobs:
           exit 1
       - name: Test real browser interactions
         run: node "${RUNNER_TEMP}/studio-browser-tests/smoke-test.mjs"
+      - name: Build Magnanimous Preact Studio
+        run: |
+          npm install --prefix studio --no-audit --no-fund
+          npm run build --prefix studio
+      - name: Serve Preact Studio production build
+        run: |
+          npm run preview --prefix studio -- --host 127.0.0.1 --port 4174 --strictPort > /tmp/preact-studio.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4174/preact/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/preact-studio.log
+          exit 1
+      - name: Test all Studio tools and mobile layout
+        env:
+          STUDIO_URL: http://127.0.0.1:4174/preact/
+        run: node "${RUNNER_TEMP}/studio-browser-tests/studio-smoke-test.mjs"
