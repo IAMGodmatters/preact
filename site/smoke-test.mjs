@@ -40,7 +40,7 @@ try {
     await page.getByPlaceholder('Paste or type your text here…').fill('Magnanimous test');
     await page.getByText('2', { exact: true }).first().waitFor();
     await page.getByRole('button', { name: 'UPPERCASE' }).click();
-    await page.getByDisplayValue('MAGNANIMOUS TEST').waitFor();
+    if (await page.locator('textarea').inputValue() !== 'MAGNANIMOUS TEST') throw new Error('Uppercase conversion did not update the text');
   });
   await check('JSON format and validate', async () => {
     await page.getByRole('button', { name: 'JSON tool', exact: true }).click();
@@ -55,7 +55,7 @@ try {
   });
   await check('focus timer starts and pauses', async () => {
     await page.getByRole('button', { name: 'Focus timer', exact: true }).click();
-    await page.getByRole('button', { name: '5 min' }).click();
+    await page.getByRole('button', { name: '5 min', exact: true }).click();
     await page.getByRole('button', { name: 'Start focus' }).click();
     await page.getByRole('button', { name: 'Pause' }).waitFor();
     await page.getByRole('button', { name: 'Pause' }).click();
@@ -71,7 +71,7 @@ try {
   });
   await check('unit conversion', async () => {
     await page.getByRole('button', { name: 'Unit converter', exact: true }).click();
-    await page.getByRole('button', { name: 'Convert' }).click();
+    await page.getByRole('button', { name: 'Convert', exact: true }).click();
     await page.getByText('0.621371 mi').waitFor();
   });
   await check('theme toggle', async () => {
