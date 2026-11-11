@@ -19,7 +19,7 @@ A free, private browser-based productivity workspace published as a static site.
 - Tasks, notes, plans, habits and theme are stored in localStorage on the current browser/device.
 - No account, server database, analytics, API keys, paid provider, or external AI service.
 - Data does not sync between devices. Use Backup & restore to preserve or move it.
-- Restore accepts Magnanimous Studio JSON backups up to 5 MB and asks before replacing local data.
+- Restore accepts Magnanimous Studio JSON backups up to 5 MB, asks before replacing local data, sanitizes malformed records, validates calendar dates, and writes all four collections as one rollback-protected operation.
 - Clearing browser storage can remove local data.
 - Preact and Preact Hooks load from esm.sh; internet access is required for the initial app load.
 - The focus timer runs while the page remains open; it is not a background notification service.
@@ -27,5 +27,5 @@ A free, private browser-based productivity workspace published as a static site.
 ## Development and QA
 - Framework development source: ../studio/.
 - Static production source: this folder.
-- smoke-test.mjs contains browser interaction checks.
-- .github/workflows/studio-smoke-tests.yml runs JavaScript syntax and Chromium browser checks when GitHub Actions is enabled.
+- smoke-test.mjs exercises creation, editing, deletion, filtering, clipboard, calculation and JSON errors, planner and habit updates, timer controls, conversion, backup restore/rejection/sanitization, corrupted storage, quota failures, page errors, and mobile overflow.
+- .github/workflows/studio-smoke-tests.yml runs syntax and Chromium browser checks using an isolated temporary test install, so it does not invoke the Preact repository's package build lifecycle.

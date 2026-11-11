@@ -25,11 +25,16 @@ jobs:
         with:
           node-version: 22
       - name: Check JavaScript syntax
-        run: node --check site/app.js
-      - name: Install browser test runtime
         run: |
-          npm install --no-save playwright
-          npx playwright install --with-deps chromium
+          node --check site/app.js
+          node --check site/smoke-test.mjs
+      - name: Install isolated browser test runtime
+        run: |
+          TEST_DIR="${RUNNER_TEMP}/studio-browser-tests"
+          mkdir -p "$TEST_DIR"
+          npm install --prefix "$TEST_DIR" --no-save --package-lock=false --ignore-scripts playwright
+          "$TEST_DIR/node_modules/.bin/playwright" install --with-deps chromium
+          cp site/smoke-test.mjs "$TEST_DIR/smoke-test.mjs"
       - name: Serve static app
         run: |
           python3 -m http.server 4173 --directory site > /tmp/studio-http.log 2>&1 &
@@ -37,4 +42,4 @@ jobs:
           cat /tmp/studio-http.log
           exit 1
       - name: Test real browser interactions
-        run: node site/smoke-test.mjs
+        run: node "${RUNNER_TEMP}/studio-browser-tests/smoke-test.mjs"
